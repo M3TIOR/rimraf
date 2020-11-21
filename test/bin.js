@@ -1,3 +1,13 @@
+/**
+ * @author Isaac Z. Schlueter and Contributors
+ * @license ISC License
+ *   <strong>Copyright (c) Isaac Z. Schlueter and Contributors</strong>
+ *   <p>
+ *     See the LICENSE file in the root of this repository for permissions and
+ *     restrictions.
+ *   </p>
+ */
+
 var bin = require.resolve('../bin.js')
 var t = require('tap')
 var mkdirp = require('mkdirp')

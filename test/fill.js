@@ -1,3 +1,13 @@
+/**
+ * @author Isaac Z. Schlueter and Contributors
+ * @license ISC License
+ *   <strong>Copyright (c) Isaac Z. Schlueter and Contributors</strong>
+ *   <p>
+ *     See the LICENSE file in the root of this repository for permissions and
+ *     restrictions.
+ *   </p>
+ */
+
 var fs = require('fs')
 var mkdirp = require('mkdirp')
 
@@ -38,4 +48,3 @@ function fill (depth, files, folders, target) {
     fill(depth, files, folders, target + '/d-' + depth + '-' + f)
   }
 }
-
