@@ -1,12 +1,7 @@
 const assert = require("assert")
 const path = require("path")
 const fs = require("fs")
-let glob = undefined
-try {
-  glob = require("glob")
-} catch (_err) {
-  // treat glob as optional.
-}
+const glob = require("glob");
 
 const defaultGlobOpts = {
   nosort: true,
