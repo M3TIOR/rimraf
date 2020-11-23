@@ -8,13 +8,13 @@
  *   </p>
  */
 
-var bin = require.resolve('../bin.js')
+var bin = require.resolve('../cli/bin.js')
 var t = require('tap')
 var mkdirp = require('mkdirp')
 var fs = require('fs')
 var spawn = require('child_process').spawn
 var node = process.execPath
-var rimraf = require('../')
+var rimraf = require('../src/rimraf.js')
 
 t.test('setup', function (t) {
   rimraf.sync(__dirname + '/bintest')

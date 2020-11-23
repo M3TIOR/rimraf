@@ -9,7 +9,7 @@
  *   </p>
  */
 
-const rimraf = require('./')
+const rimraf = require('../src/rimraf.js')
 
 const path = require('path')
 

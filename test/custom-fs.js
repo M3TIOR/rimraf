@@ -8,7 +8,7 @@
  *   </p>
  */
 
-var rimraf = require('../')
+var rimraf = require('../src/rimraf.js')
 var fs = require('fs')
 var path = require('path')
 var t = require('tap')
