@@ -7,10 +7,11 @@
   "license": "ISC",
   "repository": "git://github.com/isaacs/rimraf.git",
   "scripts": {
-    "preversion": "npm test",
+    "preversion": "npm run-script lint; npm test;",
     "postversion": "npm publish",
     "postpublish": "git push origin --follow-tags",
-    "test": "tap test/*.js"
+    "test": "tap test/*.js",
+    "lint": "eslint src/ cli/ test/"
   },
   "bin": "cli/bin.js",
   "dependencies": {
@@ -23,6 +24,8 @@
     "rimraf.js"
   ],
   "devDependencies": {
+    "eslint": "^7.12.1",
+    "eslint-plugin-jsdoc": "^30.7.7",
     "mkdirp": "^0.5.1",
     "tap": "^12.1.1"
   },
