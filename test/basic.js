@@ -20,103 +20,112 @@ import { dirname } from "path";
 import fs from "fs";
 
 
+// eslint-disable-next-line 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 
 
-tap.test('initial clean', function (tap) {
+tap.test('initial clean', (tap) => {
 	rimrafSync(__dirname + '/target');
-	tap.throws(function () {
-		fs.statSync(__dirname + '/target');
-	});
+	tap.throws(() => fs.statSync(__dirname + '/target'));
 	tap.end();
 });
 
-tap.test('sync removal', function (tap) {
+tap.test('sync removal', (tap) => {
 	fill();
 	tap.ok(fs.statSync(__dirname + '/target').isDirectory());
 
 	rimrafSync(__dirname + '/target');
-	tap.throws(function () {
-		fs.statSync(__dirname + '/target');
-	});
+	tap.throws(() => fs.statSync(__dirname + '/target'));
 	tap.end();
 });
 
-tap.test('async removal', function (tap) {
+tap.test('async removal', (tap) => {
 	fill();
 	tap.ok(fs.statSync(__dirname + '/target').isDirectory());
 
-	rimraf(__dirname + '/target', function (er) {
-		if (er)
-			throw er;
-		tap.throws(function () {
-			fs.statSync(__dirname + '/target');
-		});
+	rimraf(__dirname + '/target', (er) => {
+		if (er) throw er;
+
+		tap.throws(() => fs.statSync(__dirname + '/target'));
 		tap.end();
 	});
 });
 
-tap.test('glob', function (tap) {
+tap.test('glob', (tap) => {
 	tap.plan(2);
 	tap.test('async', function (tap) {
 		fill();
-		var pattern = __dirname + '/target/f-*';
-		var before = glob.sync(pattern);
+
+		const pattern = __dirname + '/target/f-*';
+		const before = glob.sync(pattern);
 		tap.notEqual(before.length, 0);
-		rimraf(pattern, function (er) {
+
+		rimraf(pattern, (er) => {
 			if (er)
 				throw er;
-			var after = glob.sync(pattern);
+
+			const after = glob.sync(pattern);
 			tap.same(after, []);
 			rimrafSync(__dirname + '/target');
+
 			tap.end();
 		});
 	});
-	tap.test('sync', function (tap) {
+	tap.test('sync', (tap) => {
 		fill();
-		var pattern = __dirname + '/target/f-*';
-		var before = glob.sync(pattern);
+
+		const pattern = __dirname + '/target/f-*';
+		const before = glob.sync(pattern);
 		tap.notEqual(before.length, 0);
 		rimrafSync(pattern);
-		var after = glob.sync(pattern);
+
+		const after = glob.sync(pattern);
 		tap.same(after, []);
 		rimrafSync(__dirname + '/target');
+
 		tap.end();
 	});
 });
 
-tap.test('no glob', function (tap) {
+tap.test('no glob', (tap) => {
 	tap.plan(2);
-	tap.test('async', function (tap) {
+	tap.test('async', (tap) => {
 		fill();
-		var pattern = __dirname + '/target/f-*';
-		var before = glob.sync(pattern);
+
+		const pattern = __dirname + '/target/f-*';
+		const before = glob.sync(pattern);
 		tap.notEqual(before.length, 0);
-		rimraf(pattern, { disableGlob: true }, function (er) {
+
+		rimraf(pattern, { glob: false }, function (er) {
 			if (er)
 				throw er;
-			var after = glob.sync(pattern);
+
+			const after = glob.sync(pattern);
 			tap.same(after, before);
 			rimrafSync(__dirname + '/target');
+
 			tap.end();
 		});
 	});
-	tap.test('sync', function (tap) {
+	tap.test('sync', (tap) => {
 		fill();
-		var pattern = __dirname + '/target/f-*';
-		var before = glob.sync(pattern);
+
+		const pattern = __dirname + '/target/f-*';
+		const before = glob.sync(pattern);
 		tap.notEqual(before.length, 0);
-		rimrafSync(pattern, { disableGlob: true });
-		var after = glob.sync(pattern);
+		rimrafSync(pattern, { glob: false });
+
+		const after = glob.sync(pattern);
 		tap.same(after, before);
 		rimrafSync(__dirname + '/target');
+
 		tap.end();
 	});
 });
 
-tap.test('verify that cleanup happened', function (tap) {
+tap.test('verify that cleanup happened', (tap) => {
 	tap.throws(fs.statSync.bind(fs, __dirname + '/../target'));
 	tap.throws(fs.statSync.bind(fs, __dirname + '/target'));
 	tap.end();

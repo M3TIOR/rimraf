@@ -81,7 +81,8 @@ errors are handled for you:
     Relevant for both sync and async usage.
 
 * disableGlob
-
+    WARNING: Depricated, this value no longer does anything.
+    to disable globbing, please set options.glob to a falsy value.
     Set to any non-falsey value to disable globbing entirely.
     (Equivalent to setting `glob: false`.)
 

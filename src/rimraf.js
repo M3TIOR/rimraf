@@ -42,127 +42,57 @@ import fs from "fs";
 
 
 
-const defaultGlobOpts = {
-	nosort: true,
-	silent: true
-};
-
+// Module Globals
+const isWindows = (process.platform === "win32");
+const fsMethods = [
+	// fs methods that can be be overriden by the user.
+	'unlink', 'chmod', 'stat', 'lstat', 'rmdir', 'readdir'
+];
 // for EMFILE handling
 let timeout = 0;
 
-const isWindows = (process.platform === "win32");
+
 
 /** @internal */
-const defaults = options => {
-	const methods = [
-		'unlink',
-		'chmod',
-		'stat',
-		'lstat',
-		'rmdir',
-		'readdir'
-	];
-	methods.forEach(m => {
+function assignOptionDefaults(options) {
+	fsMethods.forEach(m => {
+		const mSync = `${m}Sync`;
+
 		options[m] = options[m] || fs[m];
-		m = m + 'Sync';
-		options[m] = options[m] || fs[m];
+		options[mSync] = options[mSync] || fs[mSync];
 	});
 
 	options.maxBusyTries = options.maxBusyTries || 3;
 	options.emfileWait = options.emfileWait || 1000;
-	if (options.glob === false) {
-		options.disableGlob = true;
-	}
-	if (options.disableGlob !== true && glob === undefined) {
-		throw Error('glob dependency not found, set `options.disableGlob = true` if intentional');
-	}
-	options.disableGlob = options.disableGlob || false;
-	options.glob = options.glob || defaultGlobOpts;
-};
 
-const rimraf = (p, options, cb) => {
-	if (typeof options === 'function') {
-		cb = options;
-		options = {};
+	if (typeof options.glob !== "object") {
+		options.glob = defaultGlobOpts;
+	}
+	else {
+		// Otherwise allow options values to override the defautls.
+		options.glob = Options.assign({
+			nosort: true,
+			silent: true
+		}, options.glob);
 	}
 
-	assert(p, 'rimraf: missing path');
-	assert.equal(typeof p, 'string', 'rimraf: path should be a string');
-	assert.equal(typeof cb, 'function', 'rimraf: callback function required');
-	assert(options, 'rimraf: invalid options argument provided');
-	assert.equal(typeof options, 'object', 'rimraf: options should be object');
+}
 
-	defaults(options);
-
-	let busyTries = 0;
-	let errState = null;
-	let n = 0;
-
-	const next = (er) => {
-		errState = errState || er;
-		if (--n === 0)
-			cb(errState);
-	};
-
-	const afterGlob = (er, results) => {
-		if (er)
-			return cb(er);
-
-		n = results.length;
-		if (n === 0)
-			return cb();
-
-		results.forEach(p => {
-			const CB = (er) => {
-				if (er) {
-					if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") &&
-              busyTries < options.maxBusyTries) {
-						busyTries ++;
-						// try again, with the same exact callback as this one.
-						return setTimeout(() => rimraf_(p, options, CB), busyTries * 100);
-					}
-
-					// this one won't happen if graceful-fs is used.
-					if (er.code === "EMFILE" && timeout < options.emfileWait) {
-						return setTimeout(() => rimraf_(p, options, CB), timeout ++);
-					}
-
-					// already gone
-					if (er.code === "ENOENT") er = null;
-				}
-
-				timeout = 0;
-				next(er);
-			};
-			rimraf_(p, options, CB);
-		});
-	};
-
-	if (options.disableGlob || !glob.hasMagic(p))
-		return afterGlob(null, [p]);
-
-	options.lstat(p, (er, stat) => {
-		if (!er)
-			return afterGlob(null, [p]);
-
-		glob(p, options.glob, afterGlob);
-	});
-
-};
-
-// Two possible strategies.
-// 1. Assume it's a file.  unlink it, then do the dir stuff on EPERM or EISDIR
-// 2. Assume it's a directory.  readdir, then do the file stuff on ENOTDIR
-//
-// Both result in an extra syscall when you guess wrong.  However, there
-// are likely far more normal files in the world than directories.  This
-// is based on the assumption that a the average number of files per
-// directory is >= 1.
-//
-// If anyone ever complains about this, then I guess the strategy could
-// be made configurable somehow.  But until then, YAGNI.
 /** @internal */
-const rimraf_ = (p, options, cb) => {
+function _rimraf(p, options, cb) {
+	// NOTE:
+	//   Two possible strategies.
+	//   1. Assume it's a file; unlink it, then do the dir stuff on EPERM or EISDIR
+	//   2. Assume it's a directory; readdir, then do the file stuff on ENOTDIR
+	//
+	//   Both result in an extra syscall when you guess wrong.  However, there
+	//   are likely far more normal files in the world than directories.  This
+	//   is based on the assumption that a the average number of files per
+	//   directory is >= 1.
+	//
+	//   If anyone ever complains about this, then I guess the strategy could
+	//   be made configurable somehow.  But until then, YAGNI.
+
 	assert(p);
 	assert(options);
 	assert(typeof cb === 'function');
@@ -194,10 +124,10 @@ const rimraf_ = (p, options, cb) => {
 			return cb(er);
 		});
 	});
-};
+}
 
 /** @internal */
-const fixWinEPERM = (p, options, er, cb) => {
+function fixWinEPERM(p, options, er, cb) {
 	assert(p);
 	assert(options);
 	assert(typeof cb === 'function');
@@ -215,10 +145,10 @@ const fixWinEPERM = (p, options, er, cb) => {
 					options.unlink(p, cb);
 			});
 	});
-};
+}
 
 /** @internal */
-const fixWinEPERMSync = (p, options, er) => {
+function fixWinEPERMSync(p, options, er) {
 	assert(p);
 	assert(options);
 
@@ -245,10 +175,10 @@ const fixWinEPERMSync = (p, options, er) => {
 		rmdirSync(p, options, er);
 	else
 		options.unlinkSync(p);
-};
+}
 
 /** @internal */
-const rmdir = (p, options, originalEr, cb) => {
+function rmdir(p, options, originalEr, cb) {
 	assert(p);
 	assert(options);
 	assert(typeof cb === 'function');
@@ -264,10 +194,37 @@ const rmdir = (p, options, originalEr, cb) => {
 		else
 			cb(er);
 	});
-};
+}
 
 /** @internal */
-const rmkids = (p, options, cb) => {
+function rmkidsSync(p, options) {
+	assert(p);
+	assert(options);
+	options.readdirSync(p).forEach(f => rimrafSync(path.join(p, f), options));
+
+	// We only end up here once we got ENOTEMPTY at least once, and
+	// at this point, we are guaranteed to have removed all the kids.
+	// So, we know that it won't be ENOENT or ENOTDIR or anything else.
+	// try really hard to delete stuff on windows, because it has a
+	// PROFOUNDLY annoying habit of not closing handles promptly when
+	// files are deleted, resulting in spurious ENOTEMPTY errors.
+	const retries = isWindows ? 100 : 1;
+	let i = 0;
+	do {
+		let threw = true;
+		try {
+			const ret = options.rmdirSync(p, options);
+			threw = false;
+			return ret;
+		} finally {
+			if (++i < retries && threw)
+				continue; // eslint-disable-line
+		}
+	} while (true); // eslint-disable-line
+}
+
+/** @internal */
+function rmkids(p, options, cb) {
 	assert(p);
 	assert(options);
 	assert(typeof cb === 'function');
@@ -290,30 +247,159 @@ const rmkids = (p, options, cb) => {
 			});
 		});
 	});
-};
+}
+
+/** @internal */
+function rmdirSync(p, options, originalEr) {
+	assert(p);
+	assert(options);
+
+	try {
+		options.rmdirSync(p);
+	} catch (er) {
+		if (er.code === "ENOENT")
+			return;
+		if (er.code === "ENOTDIR")
+			throw originalEr;
+		if (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")
+			rmkidsSync(p, options);
+	}
+}
+
+/**
+ * @callback errorOnlyCallback
+ * @param err {Error}
+ */
+
+/**
+ * @param {string} pathOrGlob - The target['s] to be removed by rimraf.
+ * @param {(object | Function)} options - Holds the following configuration options;
+ * You may also pass native filesystem method replacements into this object
+ * and they will be used by rimraf over the their native implementations.
+ * Additionally, supply a function as this argument, and it will be treated
+ * as the callback option instead; omitting the third argument entierely.
+ * @param {(object|boolean)} options.glob - Options passed directly to the glob
+ * parser use by rimraf. See (https://www.npmjs.com/package/glob) for more
+ * info. To disable glob patterns, pass a falsy value.
+ * @param {number} options.maxBusyTries - If an `EBUSY`, `ENOTEMPTY`, or `EPERM`
+ * error code is encountered on Windows systems, then rimraf will retry with
+ * a linear backoff wait of 100ms longer on each try.
+ * The default maxBusyTries is 3.
+ * @param {number} options.emfileWait - If an `EMFILE` error is encountered,
+ * then rimraf will retry repeatedly with a linear backoff of 1ms longer
+ * on each try, until the timeout counter hits this max.
+ * The default limit is 1000.
+ *
+ * If you repeatedly encounter `EMFILE` errors, then consider using
+ * (http://npm.im/graceful-fs) in your program.
+ * @param {errorOnlyCallback} cb - A callback function to pass execution to once
+ * rimraf is finished executing, optionally accepting an error code to handle.
+ * @returns {undefined}
+ */
+function rimraf(pathOrGlob, options, cb) {
+	if (typeof options === 'function') {
+		cb = options;
+		options = {};
+	}
+
+	assert(pathOrGlob, 'rimraf: missing path');
+	assert.equal(typeof pathOrGlob, 'string', 'rimraf: path should be a string');
+	assert.equal(typeof cb, 'function', 'rimraf: callback function required');
+	assert(options, 'rimraf: invalid options argument provided');
+	assert.equal(typeof options, 'object', 'rimraf: options should be object');
+
+	assignOptionDefaults(options);
+
+	let busyTries = 0;
+	let errState = null;
+	let n = 0;
+
+	const next = (er) => {
+		errState = errState || er;
+		if (--n === 0)
+			cb(errState);
+	};
+
+	const afterGlob = (er, results) => {
+		if (er)
+			return cb(er);
+
+		n = results.length;
+		if (n === 0)
+			return cb();
+
+		results.forEach(p => {
+			const CB = (er) => {
+				if (er) {
+					if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") &&
+              busyTries < options.maxBusyTries) {
+						busyTries ++;
+						// try again, with the same exact callback as this one.
+						return setTimeout(() => _rimraf(p, options, CB), busyTries * 100);
+					}
+
+					// this one won't happen if graceful-fs is used.
+					if (er.code === "EMFILE" && timeout < options.emfileWait) {
+						return setTimeout(() => _rimraf(p, options, CB), timeout ++);
+					}
+
+					// already gone
+					if (er.code === "ENOENT") er = null;
+				}
+
+				timeout = 0;
+				next(er);
+			};
+			_rimraf(p, options, CB);
+		});
+	};
+
+	if (!glob.hasMagic(pathOrGlob))
+		return afterGlob(null, [pathOrGlob]);
+
+	options.lstat(pathOrGlob, (er) => {
+		if (!er)
+			return afterGlob(null, [pathOrGlob]);
+
+		glob(pathOrGlob, options.glob, afterGlob);
+	});
+
+}
 
 // this looks simpler, and is strictly *faster*, but will
 // tie up the JavaScript thread and fail on excessively
 // deep directory trees.
-const rimrafSync = (p, options) => {
+/**
+ * @param {string} pathOrGlob - The target['s] to be removed by rimraf.
+ * @param {(object | Function)} options - Holds the following configuration options;
+ * You may also pass native filesystem method replacements into this object
+ * and they will be used by rimraf over the their native implementations.
+ * Additionally, supply a function as this argument, and it will be treated
+ * as the callback option instead; omitting the third argument entierely.
+ * @param {(object|boolean)} options.glob - Options passed directly to the glob
+ * parser use by rimraf. See (https://www.npmjs.com/package/glob) for more
+ * info. To disable glob patterns, pass a falsy value.
+ * @returns {undefined}
+ */
+function rimrafSync(pathOrGlob, options) {
 	options = options || {};
-	defaults(options);
+	assignOptionDefaults(options);
 
-	assert(p, 'rimraf: missing path');
-	assert.equal(typeof p, 'string', 'rimraf: path should be a string');
+	assert(pathOrGlob, 'rimraf: missing path');
+	assert.equal(typeof pathOrGlob, 'string', 'rimraf: path should be a string');
 	assert(options, 'rimraf: missing options');
 	assert.equal(typeof options, 'object', 'rimraf: options should be object');
 
 	let results;
 
-	if (options.disableGlob || !glob.hasMagic(p)) {
-		results = [p];
+	if (!glob.hasMagic(pathOrGlob)) {
+		results = [pathOrGlob];
 	} else {
 		try {
-			options.lstatSync(p);
-			results = [p];
+			options.lstatSync(pathOrGlob);
+			results = [pathOrGlob];
 		} catch (er) {
-			results = glob.sync(p, options.glob);
+			results = glob.sync(pathOrGlob, options.glob);
 		}
 	}
 
@@ -352,51 +438,8 @@ const rimrafSync = (p, options) => {
 			rmdirSync(p, options, er);
 		}
 	}
-};
+}
 
-/** @internal */
-const rmdirSync = (p, options, originalEr) => {
-	assert(p);
-	assert(options);
-
-	try {
-		options.rmdirSync(p);
-	} catch (er) {
-		if (er.code === "ENOENT")
-			return;
-		if (er.code === "ENOTDIR")
-			throw originalEr;
-		if (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")
-			rmkidsSync(p, options);
-	}
-};
-
-/** @internal */
-const rmkidsSync = (p, options) => {
-	assert(p);
-	assert(options);
-	options.readdirSync(p).forEach(f => rimrafSync(path.join(p, f), options));
-
-	// We only end up here once we got ENOTEMPTY at least once, and
-	// at this point, we are guaranteed to have removed all the kids.
-	// So, we know that it won't be ENOENT or ENOTDIR or anything else.
-	// try really hard to delete stuff on windows, because it has a
-	// PROFOUNDLY annoying habit of not closing handles promptly when
-	// files are deleted, resulting in spurious ENOTEMPTY errors.
-	const retries = isWindows ? 100 : 1;
-	let i = 0;
-	do {
-		let threw = true;
-		try {
-			const ret = options.rmdirSync(p, options);
-			threw = false;
-			return ret;
-		} finally {
-			if (++i < retries && threw)
-				continue;
-		}
-	} while (true);
-};
 
 
 export default rimraf;

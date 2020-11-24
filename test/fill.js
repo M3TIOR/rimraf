@@ -11,7 +11,7 @@ import tap from "tap";
 import mkdirp from "mkdirp";
 
 // Internal Imports
-import { rimraf, rimrafSync } from "../src/rimraf.js";
+//...
 
 // Standard Imports
 import { fileURLToPath } from 'url';
@@ -19,6 +19,7 @@ import { dirname } from "path";
 import fs from "fs";
 
 
+// eslint-disable-next-line
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

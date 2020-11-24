@@ -11,7 +11,7 @@ import tap from "tap";
 import mkdirp from "mkdirp";
 
 // Internal Imports
-import { rimraf, rimrafSync } from "../src/rimraf.js";
+import { rimrafSync } from "../src/rimraf.js";
 
 // Standard Imports
 import { spawn } from "child_process";
@@ -20,6 +20,7 @@ import path from "path";
 import fs from "fs";
 
 
+// eslint-disable-next-line
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const bin = path.join(__dirname, "../cli/bin.mjs");
@@ -27,7 +28,7 @@ const node = process.execPath;
 
 
 
-tap.test('setup', function (tap) {
+tap.test('setup', (tap) => {
 	rimrafSync(__dirname + '/bintest');
 	mkdirp.sync(__dirname + '/bintest');
 	process.chdir(__dirname + '/bintest');
@@ -60,29 +61,29 @@ tap.test('setup', function (tap) {
 	tap.end();
 });
 
-tap.test('help', function (tap) {
-	var helps = ['-help', '-h', '--help', '--?'];
+tap.test('help', (tap) => {
+	const helps = ['-help', '-h', '--help', '--?'];
 	tap.plan(helps.length);
-	helps.forEach(function (h) {
-		tap.test(h, test.bind(null, h));
-	});
 
-	function test (h, tap) {
-		var child = spawn(node, [bin, h]);
-		var out = '';
-		child.stdout.on('data', function (c) { out += c; });
-		child.on('close', function (code, signal) {
+	helps.forEach((h) => tap.test(h, testHelp.bind(null, h)));
+
+	// Function body resolution and scope assignment prior to overhead call.
+	const testHelp = (helpArgVariant, tap) => {
+		const child = spawn(node, [bin, helpArgVariant]);
+		let out = '';
+		child.stdout.on('data', (c) => out += c);
+		child.on('close', (code, signal) => {
 			tap.equal(code, 0);
 			tap.equal(signal, null);
 			tap.match(out, /^Usage: rimraf <path> \[<path> \.\.\.\]/);
 			tap.end();
 		});
-	}
+	};
 });
 
-tap.test('glob, but matches', function (tap) {
-	var child = spawn(node, [bin, 'x/y/*.txt']);
-	child.on('exit', function (code) {
+tap.test('glob, but matches', (tap) => {
+	const child = spawn(node, [bin, 'x/y/*.txt']);
+	child.on('exit', (code) => {
 		tap.equal(code, 0);
 		tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
 		tap.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
@@ -90,20 +91,20 @@ tap.test('glob, but matches', function (tap) {
 	});
 });
 
-tap.test('--no-glob', function (tap) {
+tap.test('--no-glob', (tap) => {
 	tap.plan(2);
-	tap.test('no glob with *.txt', function (tap) {
-		var child = spawn(node, [bin, 'x/y/*.txt', '-G']);
-		child.on('exit', function (code) {
+	tap.test('no glob with *.txt', (tap) => {
+		const child = spawn(node, [bin, 'x/y/*.txt', '-G']);
+		child.on('exit', (code) => {
 			tap.equal(code, 0);
 			tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
 			tap.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
 			tap.end();
 		});
 	});
-	tap.test('no glob with dir star', function (tap) {
-		var child = spawn(node, [bin, '**/*.txt', '-G']);
-		child.on('exit', function (code) {
+	tap.test('no glob with dir star', (tap) => {
+		const child = spawn(node, [bin, '**/*.txt', '-G']);
+		child.on('exit', (code) => {
 			tap.equal(code, 0);
 			tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
 			tap.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
@@ -112,9 +113,9 @@ tap.test('--no-glob', function (tap) {
 	});
 });
 
-tap.test('glob, but no exact match', function (tap) {
-	var child = spawn(node, [bin, 'x/y/*.txt']);
-	child.on('exit', function (code) {
+tap.test('glob, but no exact match', (tap) => {
+	const child = spawn(node, [bin, 'x/y/*.txt']);
+	child.on('exit', (code) => {
 		tap.equal(code, 0);
 		tap.throws(fs.statSync.bind(fs, 'x/y/1.txt'));
 		tap.throws(fs.statSync.bind(fs, 'x/y/2.txt'));
@@ -124,8 +125,7 @@ tap.test('glob, but no exact match', function (tap) {
 	});
 });
 
-
-tap.test('cleanup', function (tap) {
+tap.test('cleanup', (tap) => {
 	rimrafSync(__dirname + '/bintest');
 	tap.end();
 });

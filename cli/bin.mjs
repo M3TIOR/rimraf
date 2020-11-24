@@ -11,7 +11,7 @@
 //...
 
 // Internal Imports
-import { rimraf, rimrafSync } from "../src/rimraf.js";
+import { rimraf } from "../src/rimraf.js";
 
 // Standard Imports
 import path from "path";
