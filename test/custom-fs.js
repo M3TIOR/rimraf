@@ -2,17 +2,34 @@
  * @author Isaac Z. Schlueter and Contributors
  * @license ISC
  */
+"use strict";
 
-var rimraf = require('../src/rimraf.js');
-var fs = require('fs');
-var path = require('path');
-var t = require('tap');
+
+
+// External Imports
+import tap from "tap";
+import mkdirp from "mkdirp";
+
+// Internal Imports
+import { rimraf, rimrafSync } from "../src/rimraf.js";
+
+// Standard Imports
+import { spawn } from "child_process";
+import { fileURLToPath } from 'url';
+import path from "path";
+import fs from "fs";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 
 process.chdir(__dirname);
 
 // track that all the things happened
-var keepDirs = {};
-var intercepted = {};
+let keepDirs = {};
+let intercepted = {};
 
 function intercept (method, path) {
 	intercepted[method] = intercepted[method] || [];
@@ -22,7 +39,7 @@ function intercept (method, path) {
 	intercepted._removed = intercepted._removed.sort();
 }
 
-var expectAsync = {
+const expectAsync = {
 	_removed: [
 		'a',
 		'a/x',
@@ -62,7 +79,7 @@ var expectAsync = {
 	]
 };
 
-var expectSync = {
+const expectSync = {
 	_removed: [
 		'a',
 		'a/x',
@@ -148,8 +165,6 @@ var myFs = {
 	}
 };
 
-var mkdirp = require('mkdirp');
-
 function create () {
 	intercepted = {};
 	intercepted._removed = [];
@@ -163,32 +178,32 @@ function create () {
 	});
 }
 
-t.test('setup', function (t) {
+tap.test('setup', function (tap) {
 	create();
-	t.end();
+	tap.end();
 });
 
-t.test('rimraf with interceptor', function (t) {
+tap.test('rimraf with interceptor', function (tap) {
 	rimraf('a', myFs, function (er) {
 		if (er) {
 			throw er;
 		}
-		t.strictSame(intercepted, expectAsync);
+		tap.strictSame(intercepted, expectAsync);
 		create();
-		t.end();
+		tap.end();
 	});
 });
 
-t.test('rimraf sync with interceptor', function (t) {
+tap.test('rimrafSync with interceptor', function (tap) {
 	create();
-	rimraf.sync('a', myFs);
-	t.strictSame(intercepted, expectSync);
+	rimrafSync('a', myFs);
+	tap.strictSame(intercepted, expectSync);
 	create();
-	t.end();
+	tap.end();
 });
 
-t.test('cleanup', function (t) {
-	rimraf.sync('a');
-	t.throws(fs.statSync.bind(fs, 'a'));
-	t.end();
+tap.test('cleanup', function (tap) {
+	rimrafSync('a');
+	tap.throws(fs.statSync.bind(fs, 'a'));
+	tap.end();
 });

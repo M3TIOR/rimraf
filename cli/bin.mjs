@@ -1,12 +1,22 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --experimental-modules
 /**
  * @author Isaac Z. Schlueter and Contributors
  * @license ISC
  */
+"use strict";
 
-const rimraf = require('../src/rimraf.js');
 
-const path = require('path');
+
+// External Imports
+//...
+
+// Internal Imports
+import { rimraf, rimrafSync } from "../src/rimraf.js";
+
+// Standard Imports
+import path from "path";
+
+
 
 const isRoot = arg => /^(\/|[a-zA-Z]:\\)$/.test(path.resolve(arg));
 const filterOutRoot = arg => {

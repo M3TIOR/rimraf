@@ -26,11 +26,21 @@
  *     </li>
  *   </ul></p>
  */
+"use strict";
 
-const assert = require("assert");
-const path = require("path");
-const fs = require("fs");
-const glob = require("glob");
+
+// External Imports
+import glob from "glob";
+
+// Internal Imports
+//...
+
+// Standard Imports
+import assert from "assert";
+import path from "path";
+import fs from "fs";
+
+
 
 const defaultGlobOpts = {
 	nosort: true,
@@ -388,5 +398,9 @@ const rmkidsSync = (p, options) => {
 	} while (true);
 };
 
-module.exports = rimraf;
-rimraf.sync = rimrafSync;
+
+export default rimraf;
+export {
+	rimraf,
+	rimrafSync,
+};

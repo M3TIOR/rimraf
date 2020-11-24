@@ -39,7 +39,7 @@ errors are handled for you:
     the supplied function will be used instead of the default fs
     method.
 
-    Sync methods are only relevant for `rimraf.sync()`, of course.
+    Sync methods are only relevant for `rimrafSync()`, of course.
 
     For example:
 
@@ -85,7 +85,7 @@ errors are handled for you:
     Set to any non-falsey value to disable globbing entirely.
     (Equivalent to setting `glob: false`.)
 
-## rimraf.sync
+## rimrafSync
 
 It can remove stuff synchronously, too.  But that's not so good.  Use
 the async API.  It's better.

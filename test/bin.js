@@ -2,17 +2,33 @@
  * @author Isaac Z. Schlueter and Contributors
  * @license ISC
  */
+"use strict";
 
-var bin = require.resolve('../cli/bin.js');
-var t = require('tap');
-var mkdirp = require('mkdirp');
-var fs = require('fs');
-var spawn = require('child_process').spawn;
-var node = process.execPath;
-var rimraf = require('../src/rimraf.js');
 
-t.test('setup', function (t) {
-	rimraf.sync(__dirname + '/bintest');
+
+// External Imports
+import tap from "tap";
+import mkdirp from "mkdirp";
+
+// Internal Imports
+import { rimraf, rimrafSync } from "../src/rimraf.js";
+
+// Standard Imports
+import { spawn } from "child_process";
+import { fileURLToPath } from 'url';
+import path from "path";
+import fs from "fs";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const bin = path.join(__dirname, "../cli/bin.mjs");
+const node = process.execPath;
+
+
+
+tap.test('setup', function (tap) {
+	rimrafSync(__dirname + '/bintest');
 	mkdirp.sync(__dirname + '/bintest');
 	process.chdir(__dirname + '/bintest');
 	mkdirp.sync('a/b/c');
@@ -41,75 +57,75 @@ t.test('setup', function (t) {
 	fs.writeFileSync('x/y/z/2.txt', '\n');
 	fs.writeFileSync('x/y/z/3.txt', '\n');
 	fs.writeFileSync('x/y/z/*.txt', '\n');
-	t.end();
+	tap.end();
 });
 
-t.test('help', function (t) {
+tap.test('help', function (tap) {
 	var helps = ['-help', '-h', '--help', '--?'];
-	t.plan(helps.length);
+	tap.plan(helps.length);
 	helps.forEach(function (h) {
-		t.test(h, test.bind(null, h));
+		tap.test(h, test.bind(null, h));
 	});
 
-	function test (h, t) {
+	function test (h, tap) {
 		var child = spawn(node, [bin, h]);
 		var out = '';
 		child.stdout.on('data', function (c) { out += c; });
 		child.on('close', function (code, signal) {
-			t.equal(code, 0);
-			t.equal(signal, null);
-			t.match(out, /^Usage: rimraf <path> \[<path> \.\.\.\]/);
-			t.end();
+			tap.equal(code, 0);
+			tap.equal(signal, null);
+			tap.match(out, /^Usage: rimraf <path> \[<path> \.\.\.\]/);
+			tap.end();
 		});
 	}
 });
 
-t.test('glob, but matches', function (t) {
+tap.test('glob, but matches', function (tap) {
 	var child = spawn(node, [bin, 'x/y/*.txt']);
 	child.on('exit', function (code) {
-		t.equal(code, 0);
-		t.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
-		t.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
-		t.end();
+		tap.equal(code, 0);
+		tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
+		tap.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
+		tap.end();
 	});
 });
 
-t.test('--no-glob', function (t) {
-	t.plan(2);
-	t.test('no glob with *.txt', function (t) {
+tap.test('--no-glob', function (tap) {
+	tap.plan(2);
+	tap.test('no glob with *.txt', function (tap) {
 		var child = spawn(node, [bin, 'x/y/*.txt', '-G']);
 		child.on('exit', function (code) {
-			t.equal(code, 0);
-			t.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
-			t.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
-			t.end();
+			tap.equal(code, 0);
+			tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
+			tap.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
+			tap.end();
 		});
 	});
-	t.test('no glob with dir star', function (t) {
+	tap.test('no glob with dir star', function (tap) {
 		var child = spawn(node, [bin, '**/*.txt', '-G']);
 		child.on('exit', function (code) {
-			t.equal(code, 0);
-			t.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
-			t.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
-			t.end();
+			tap.equal(code, 0);
+			tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
+			tap.doesNotThrow(fs.statSync.bind(fs, 'x/y/1.txt'));
+			tap.end();
 		});
 	});
 });
 
-t.test('glob, but no exact match', function (t) {
+tap.test('glob, but no exact match', function (tap) {
 	var child = spawn(node, [bin, 'x/y/*.txt']);
 	child.on('exit', function (code) {
-		t.equal(code, 0);
-		t.throws(fs.statSync.bind(fs, 'x/y/1.txt'));
-		t.throws(fs.statSync.bind(fs, 'x/y/2.txt'));
-		t.throws(fs.statSync.bind(fs, 'x/y/3.txt'));
-		t.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
-		t.end();
+		tap.equal(code, 0);
+		tap.throws(fs.statSync.bind(fs, 'x/y/1.txt'));
+		tap.throws(fs.statSync.bind(fs, 'x/y/2.txt'));
+		tap.throws(fs.statSync.bind(fs, 'x/y/3.txt'));
+		tap.throws(fs.statSync.bind(fs, 'x/y/*.txt'));
+		tap.end();
 	});
 });
 
 
-t.test('cleanup', function (t) {
-	rimraf.sync(__dirname + '/bintest');
-	t.end();
+tap.test('cleanup', function (tap) {
+	rimrafSync(__dirname + '/bintest');
+	tap.end();
 });

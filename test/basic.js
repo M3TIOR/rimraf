@@ -2,110 +2,122 @@
  * @author Isaac Z. Schlueter and Contributors
  * @license ISC
  */
+"use strict";
 
-var rimraf = require('../src/rimraf.js');
-var t = require('tap');
 
-var fs = require('fs');
-var fill = require('./fill.js');
 
-t.test('initial clean', function (t) {
-	rimraf.sync(__dirname + '/target');
-	t.throws(function () {
+// External Imports
+import tap from "tap";
+import glob from "glob";
+
+// Internal Imports
+import { rimraf, rimrafSync } from "../src/rimraf.js";
+import fill from "./fill.js";
+
+// Standard Imports
+import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import fs from "fs";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
+
+tap.test('initial clean', function (tap) {
+	rimrafSync(__dirname + '/target');
+	tap.throws(function () {
 		fs.statSync(__dirname + '/target');
 	});
-	t.end();
+	tap.end();
 });
 
-t.test('sync removal', function (t) {
+tap.test('sync removal', function (tap) {
 	fill();
-	t.ok(fs.statSync(__dirname + '/target').isDirectory());
+	tap.ok(fs.statSync(__dirname + '/target').isDirectory());
 
-	rimraf.sync(__dirname + '/target');
-	t.throws(function () {
+	rimrafSync(__dirname + '/target');
+	tap.throws(function () {
 		fs.statSync(__dirname + '/target');
 	});
-	t.end();
+	tap.end();
 });
 
-t.test('async removal', function (t) {
+tap.test('async removal', function (tap) {
 	fill();
-	t.ok(fs.statSync(__dirname + '/target').isDirectory());
+	tap.ok(fs.statSync(__dirname + '/target').isDirectory());
 
 	rimraf(__dirname + '/target', function (er) {
 		if (er)
 			throw er;
-		t.throws(function () {
+		tap.throws(function () {
 			fs.statSync(__dirname + '/target');
 		});
-		t.end();
+		tap.end();
 	});
 });
 
-t.test('glob', function (t) {
-	t.plan(2);
-	t.test('async', function (t) {
+tap.test('glob', function (tap) {
+	tap.plan(2);
+	tap.test('async', function (tap) {
 		fill();
-		var glob = require('glob');
 		var pattern = __dirname + '/target/f-*';
 		var before = glob.sync(pattern);
-		t.notEqual(before.length, 0);
+		tap.notEqual(before.length, 0);
 		rimraf(pattern, function (er) {
 			if (er)
 				throw er;
 			var after = glob.sync(pattern);
-			t.same(after, []);
-			rimraf.sync(__dirname + '/target');
-			t.end();
+			tap.same(after, []);
+			rimrafSync(__dirname + '/target');
+			tap.end();
 		});
 	});
-	t.test('sync', function (t) {
+	tap.test('sync', function (tap) {
 		fill();
-		var glob = require('glob');
 		var pattern = __dirname + '/target/f-*';
 		var before = glob.sync(pattern);
-		t.notEqual(before.length, 0);
-		rimraf.sync(pattern);
+		tap.notEqual(before.length, 0);
+		rimrafSync(pattern);
 		var after = glob.sync(pattern);
-		t.same(after, []);
-		rimraf.sync(__dirname + '/target');
-		t.end();
+		tap.same(after, []);
+		rimrafSync(__dirname + '/target');
+		tap.end();
 	});
 });
 
-t.test('no glob', function (t) {
-	t.plan(2);
-	t.test('async', function (t) {
+tap.test('no glob', function (tap) {
+	tap.plan(2);
+	tap.test('async', function (tap) {
 		fill();
-		var glob = require('glob');
 		var pattern = __dirname + '/target/f-*';
 		var before = glob.sync(pattern);
-		t.notEqual(before.length, 0);
+		tap.notEqual(before.length, 0);
 		rimraf(pattern, { disableGlob: true }, function (er) {
 			if (er)
 				throw er;
 			var after = glob.sync(pattern);
-			t.same(after, before);
-			rimraf.sync(__dirname + '/target');
-			t.end();
+			tap.same(after, before);
+			rimrafSync(__dirname + '/target');
+			tap.end();
 		});
 	});
-	t.test('sync', function (t) {
+	tap.test('sync', function (tap) {
 		fill();
-		var glob = require('glob');
 		var pattern = __dirname + '/target/f-*';
 		var before = glob.sync(pattern);
-		t.notEqual(before.length, 0);
-		rimraf.sync(pattern, { disableGlob: true });
+		tap.notEqual(before.length, 0);
+		rimrafSync(pattern, { disableGlob: true });
 		var after = glob.sync(pattern);
-		t.same(after, before);
-		rimraf.sync(__dirname + '/target');
-		t.end();
+		tap.same(after, before);
+		rimrafSync(__dirname + '/target');
+		tap.end();
 	});
 });
 
-t.test('verify that cleanup happened', function (t) {
-	t.throws(fs.statSync.bind(fs, __dirname + '/../target'));
-	t.throws(fs.statSync.bind(fs, __dirname + '/target'));
-	t.end();
+tap.test('verify that cleanup happened', function (tap) {
+	tap.throws(fs.statSync.bind(fs, __dirname + '/../target'));
+	tap.throws(fs.statSync.bind(fs, __dirname + '/target'));
+	tap.end();
 });

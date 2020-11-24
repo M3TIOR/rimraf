@@ -2,6 +2,7 @@
   "name": "rimraf",
   "version": "3.0.2",
   "main": "src/rimraf.js",
+  "type": "module",
   "description": "A deep deletion module for node (like `rm -rf`)",
   "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
   "license": "ISC",
@@ -10,10 +11,10 @@
     "preversion": "npm run-script lint; npm test;",
     "postversion": "npm publish",
     "postpublish": "git push origin --follow-tags",
-    "test": "tap test/*.js",
+    "test": "tap --no-esm test/*.js",
     "lint": "eslint src/ cli/ test/"
   },
-  "bin": "cli/bin.js",
+  "bin": "cli/bin.mjs",
   "dependencies": {
     "glob": "^7.1.3"
   },
@@ -27,7 +28,7 @@
     "eslint": "^7.12.1",
     "eslint-plugin-jsdoc": "^30.7.7",
     "mkdirp": "^0.5.1",
-    "tap": "^12.1.1"
+    "tap": "14"
   },
   "funding": {
     "url": "https://github.com/sponsors/isaacs"

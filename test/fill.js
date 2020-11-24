@@ -2,18 +2,32 @@
  * @author Isaac Z. Schlueter and Contributors
  * @license ISC
  */
+"use strict";
 
-var fs = require('fs');
-var mkdirp = require('mkdirp');
 
-module.exports = function () {
-	fill(4, 10, 2, __dirname + '/target');
-};
 
-if (module === require.main) {
-	require('tap').pass('yes');
-	return;
-}
+// External Imports
+import tap from "tap";
+import mkdirp from "mkdirp";
+
+// Internal Imports
+import { rimraf, rimrafSync } from "../src/rimraf.js";
+
+// Standard Imports
+import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import fs from "fs";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
+
+// if (module === require.main) {
+// 	require('tap').pass('yes');
+// 	return;
+// }
 
 function fill (depth, files, folders, target) {
 	mkdirp.sync(target);
@@ -43,3 +57,8 @@ function fill (depth, files, folders, target) {
 		fill(depth, files, folders, target + '/d-' + depth + '-' + f);
 	}
 }
+
+// This should always pass. Perhaps make separate location for helper files
+// so we don't have to explicitly implement a tap call?
+tap.pass("yes!");
+export default () => fill(4, 10, 2, __dirname + '/target');
