@@ -65,7 +65,6 @@ function assignOptionDefaults(options) {
 	options.maxBusyTries = options.maxBusyTries || 3;
 	options.emfileWait = options.emfileWait || 1000;
 
-	// phony commit...
 	if (typeof options.glob !== "object") {
 		options.glob = defaultGlobOpts;
 	}
@@ -268,13 +267,13 @@ function rmdirSync(p, options, originalEr) {
 }
 
 /**
- * @callback errorOnlyCallback
+ * @callback errorQueryCallback
  * @param err {Error}
  */
 
 /**
  * @param {string} pathOrGlob - The target['s] to be removed by rimraf.
- * @param {(object | Function)} options - Holds the following configuration options;
+ * @param {(object|function)} options - Holds the following configuration options;
  * You may also pass native filesystem method replacements into this object
  * and they will be used by rimraf over the their native implementations.
  * Additionally, supply a function as this argument, and it will be treated
@@ -293,7 +292,7 @@ function rmdirSync(p, options, originalEr) {
  *
  * If you repeatedly encounter `EMFILE` errors, then consider using
  * (http://npm.im/graceful-fs) in your program.
- * @param {errorOnlyCallback} cb - A callback function to pass execution to once
+ * @param {errorQueryCallback} cb - A callback function to pass execution to once
  * rimraf is finished executing, optionally accepting an error code to handle.
  * @returns {undefined}
  */
@@ -372,7 +371,7 @@ function rimraf(pathOrGlob, options, cb) {
 // deep directory trees.
 /**
  * @param {string} pathOrGlob - The target['s] to be removed by rimraf.
- * @param {(object | Function)} options - Holds the following configuration options;
+ * @param {(object|function)} options - Holds the following configuration options;
  * You may also pass native filesystem method replacements into this object
  * and they will be used by rimraf over the their native implementations.
  * Additionally, supply a function as this argument, and it will be treated
