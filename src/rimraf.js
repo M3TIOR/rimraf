@@ -65,15 +65,18 @@ function assignOptionDefaults(options) {
 	options.maxBusyTries = options.maxBusyTries || 3;
 	options.emfileWait = options.emfileWait || 1000;
 
-	if (typeof options.glob !== "object") {
-		options.glob = defaultGlobOpts;
-	}
-	else {
+	if (typeof options.glob === "object") {
 		// Otherwise allow options values to override the defautls.
-		options.glob = Options.assign({
+		options.glob = Object.assign({
 			nosort: true,
 			silent: true
 		}, options.glob);
+	}
+	else if (options.glob || options.glob == null) {
+		options.glob = {
+			nosort: true,
+			silent: true
+		};
 	}
 
 }
@@ -273,7 +276,7 @@ function rmdirSync(p, options, originalEr) {
 
 /**
  * @param {string} pathOrGlob - The target['s] to be removed by rimraf.
- * @param {(object|function)} options - Holds the following configuration options;
+ * @param {(object|Function)} options - Holds the following configuration options;
  * You may also pass native filesystem method replacements into this object
  * and they will be used by rimraf over the their native implementations.
  * Additionally, supply a function as this argument, and it will be treated
@@ -354,7 +357,7 @@ function rimraf(pathOrGlob, options, cb) {
 		});
 	};
 
-	if (!glob.hasMagic(pathOrGlob))
+	if (!options.glob || !glob.hasMagic(pathOrGlob))
 		return afterGlob(null, [pathOrGlob]);
 
 	options.lstat(pathOrGlob, (er) => {
@@ -371,7 +374,7 @@ function rimraf(pathOrGlob, options, cb) {
 // deep directory trees.
 /**
  * @param {string} pathOrGlob - The target['s] to be removed by rimraf.
- * @param {(object|function)} options - Holds the following configuration options;
+ * @param {(object|Function)} options - Holds the following configuration options;
  * You may also pass native filesystem method replacements into this object
  * and they will be used by rimraf over the their native implementations.
  * Additionally, supply a function as this argument, and it will be treated
@@ -392,7 +395,7 @@ function rimrafSync(pathOrGlob, options) {
 
 	let results;
 
-	if (!glob.hasMagic(pathOrGlob)) {
+	if (!options.glob || !glob.hasMagic(pathOrGlob)) {
 		results = [pathOrGlob];
 	} else {
 		try {

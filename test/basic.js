@@ -20,7 +20,7 @@ import { dirname } from "path";
 import fs from "fs";
 
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -98,7 +98,7 @@ tap.test('no glob', (tap) => {
 		const before = glob.sync(pattern);
 		tap.notEqual(before.length, 0);
 
-		rimraf(pattern, { glob: false }, function (er) {
+		rimraf(pattern, { glob: false }, (er) => {
 			if (er)
 				throw er;
 

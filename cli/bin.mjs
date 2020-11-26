@@ -54,7 +54,7 @@ const args = process.argv.slice(2).filter(arg => {
 const go = n => {
 	if (n >= args.length)
 		return;
-	const options = noglob ? { glob: false } : {};
+	const options = noglob ? { glob: false } : { glob: {} };
 	rimraf(args[n], options, er => {
 		if (er)
 			throw er;

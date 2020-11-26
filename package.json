@@ -11,8 +11,10 @@
     "preversion": "npm run-script lint; npm test;",
     "postversion": "npm publish",
     "postpublish": "git push origin --follow-tags",
+    "precommit": "npm run-script preversion",
+    "commit": "git commit",
     "test": "tap --no-esm test/*.js",
-    "lint": "eslint src/ cli/ test/"
+    "lint": "eslint src/* cli/* test/*"
   },
   "bin": "cli/bin.mjs",
   "dependencies": {
