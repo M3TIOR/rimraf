@@ -65,6 +65,7 @@ function assignOptionDefaults(options) {
 	options.maxBusyTries = options.maxBusyTries || 3;
 	options.emfileWait = options.emfileWait || 1000;
 
+	// phony commit...
 	if (typeof options.glob !== "object") {
 		options.glob = defaultGlobOpts;
 	}
