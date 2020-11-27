@@ -29,6 +29,7 @@
 "use strict";
 
 
+
 // External Imports
 import glob from "glob";
 
@@ -41,15 +42,12 @@ import path from "path";
 import fs from "fs";
 
 
-
 // Module Globals
 const isWindows = (process.platform === "win32");
 const fsMethods = [
 	// fs methods that can be be overriden by the user.
 	'unlink', 'chmod', 'stat', 'lstat', 'rmdir', 'readdir'
 ];
-// for EMFILE handling
-let timeout = 0;
 
 
 
@@ -102,7 +100,7 @@ function _rimraf(p, options, cb) {
 
 	// sunos lets the root user unlink directories, which is... weird.
 	// so we have to lstat here and make sure it's not a dir.
-	options.lstat(p, (er, st) => {
+	options.lstat(p, (er, fileStats) => {
 		if (er && er.code === "ENOENT")
 			return cb(null);
 
@@ -110,7 +108,7 @@ function _rimraf(p, options, cb) {
 		if (er && er.code === "EPERM" && isWindows)
 			fixWinEPERM(p, options, er, cb);
 
-		if (st && st.isDirectory())
+		if (fileStats && fileStats.isDirectory())
 			return rmdir(p, options, er, cb);
 
 		options.unlink(p, er => {
@@ -203,7 +201,8 @@ function rmdir(p, options, originalEr, cb) {
 function rmkidsSync(p, options) {
 	assert(p);
 	assert(options);
-	options.readdirSync(p).forEach(f => rimrafSync(path.join(p, f), options));
+
+	options.readdirSync(p).forEach((f) => rimrafSync(path.join(p, f), options));
 
 	// We only end up here once we got ENOTEMPTY at least once, and
 	// at this point, we are guaranteed to have removed all the kids.
@@ -220,6 +219,23 @@ function rmkidsSync(p, options) {
 			threw = false;
 			return ret;
 		} finally {
+			// TODO:
+			//   This needs documentation; where does this continue to?
+			//   According to the Mozilla Developer Network hosted here:
+			//     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/continue
+			//   `continue` should pass off execution to the while conditional below.
+			//   But doing so would render this condition pointless. That is unless
+			//   the finally condition we're currently executing within somehow
+			//   terminates the outer while loop. Such an unconventional use of the
+			//   syntax warrants an explanation at the very least. Otherwise I might
+			//   have pruned this code and ruined a useful feature. Perhaps this
+			//   was an oversight in the earlier days in your NodeJS career. I don't
+			//   mean to insult the writers intelligence; I feel like my wording may
+			//   come off as dericive, but it's really just constructive criticism.
+			//   I'm just a hobbyist who likes contributing to FOSS. I enjoy making
+			//   code which is easy to understand so that new people can learn from
+			//   it. It's not the fastest way of writing code. But I hope it makes
+			//   someone's life easier and more fulfilling down the road.
 			if (++i < retries && threw)
 				continue; // eslint-disable-line
 		}
@@ -240,7 +256,7 @@ function rmkids(p, options, cb) {
 			return options.rmdir(p, cb);
 		let errState;
 		files.forEach(f => {
-			rimraf(path.join(p, f), options, er => {
+			rimraf(path.join(p, f), options, (er) => {
 				if (errState)
 					return;
 				if (er)
@@ -313,13 +329,15 @@ function rimraf(pathOrGlob, options, cb) {
 
 	assignOptionDefaults(options);
 
+	// for EMFILE handling
+	let timeout = 0;
 	let busyTries = 0;
 	let errState = null;
-	let n = 0;
+	let argc = 0;
 
 	const next = (er) => {
 		errState = errState || er;
-		if (--n === 0)
+		if (--argc === 0)
 			cb(errState);
 	};
 
@@ -327,15 +345,15 @@ function rimraf(pathOrGlob, options, cb) {
 		if (er)
 			return cb(er);
 
-		n = results.length;
-		if (n === 0)
+		argc = results.length;
+		if (argc === 0)
 			return cb();
 
 		results.forEach(p => {
 			const CB = (er) => {
 				if (er) {
 					if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") &&
-              busyTries < options.maxBusyTries) {
+							busyTries < options.maxBusyTries) {
 						busyTries ++;
 						// try again, with the same exact callback as this one.
 						return setTimeout(() => _rimraf(p, options, CB), busyTries * 100);
@@ -399,46 +417,52 @@ function rimrafSync(pathOrGlob, options) {
 		results = [pathOrGlob];
 	} else {
 		try {
+			// Resolve regular paths first to save CPU time on glob rendering. And...
 			options.lstatSync(pathOrGlob);
 			results = [pathOrGlob];
 		} catch (er) {
+			// Coerce glob after regular path attempt because glob symbols and
+			// permitted Unix file system characters overlap.
 			results = glob.sync(pathOrGlob, options.glob);
 		}
 	}
 
+	// Why return early? This seems unnecessary when the JIT (if you use one)
+	// (aka I'm pretty sure V8 uses one) will just hop over the for loop
+	// after the first value comparison is true. 0 <= 0 doesn't need an extra
+	// conditional.
 	if (!results.length)
 		return;
 
-	for (let i = 0; i < results.length; i++) {
-		const p = results[i];
-
-		let st;
-		try {
-			st = options.lstatSync(p);
-		} catch (er) {
-			if (er.code === "ENOENT")
-				return;
+	for (const targetPath of results) {
+		let pathStats;
+		try { pathStats = options.lstatSync(targetPath); }
+		catch (er) {
+			if (er.code === "ENOENT") return;
 
 			// Windows can EPERM on stat.  Life is suffering.
 			if (er.code === "EPERM" && isWindows)
-				fixWinEPERMSync(p, options, er);
+				fixWinEPERMSync(targetPath, options, er);
 		}
 
 		try {
 			// sunos lets the root user unlink directories, which is... weird.
-			if (st && st.isDirectory())
-				rmdirSync(p, options, null);
+			if (pathStats && pathStats.isDirectory())
+				rmdirSync(targetPath, options, null);
 			else
-				options.unlinkSync(p);
-		} catch (er) {
+				options.unlinkSync(targetPath);
+		}
+		catch (er) {
 			if (er.code === "ENOENT")
 				return;
 			if (er.code === "EPERM")
-				return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er);
+				return (isWindows)
+					? fixWinEPERMSync(targetPath, options, er)
+					: rmdirSync(targetPath, options, er);
 			if (er.code !== "EISDIR")
 				throw er;
 
-			rmdirSync(p, options, er);
+			rmdirSync(targetPath, options, er);
 		}
 	}
 }

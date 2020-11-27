@@ -8,7 +8,7 @@
   "license": "ISC",
   "repository": "git://github.com/isaacs/rimraf.git",
   "scripts": {
-    "preversion": "npm run-script lint; npm test;",
+    "preversion": "npm run-script lint && npm test;",
     "postversion": "npm publish",
     "postpublish": "git push origin --follow-tags",
     "precommit": "npm run-script preversion",

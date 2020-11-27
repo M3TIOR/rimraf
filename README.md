@@ -9,8 +9,8 @@ Install with `npm install rimraf`, or just drop rimraf.js somewhere.
 `rimraf(f, [opts], callback)`
 
 The first parameter will be interpreted as a globbing pattern for files. If you
-want to disable globbing you can do so with `opts.disableGlob` (defaults to
-`false`). This might be handy, for instance, if you have filenames that contain
+want to disable globbing you can do so with `opts.glob = false`.
+This might be handy, for instance, if you have filenames that contain
 globbing wildcard characters.
 
 The callback will be called with an error if there is one.  Certain
@@ -76,7 +76,7 @@ errors are handled for you:
     Set to an object to pass options to the glob module.  The default
     glob options are `{ nosort: true, silent: true }`.
 
-    Glob version 6 is used in this module.
+    Glob version 7 is used in this module.
 
     Relevant for both sync and async usage.
 

@@ -65,10 +65,7 @@ tap.test('help', (tap) => {
 	const helps = ['-help', '-h', '--help', '--?'];
 	tap.plan(helps.length);
 
-	helps.forEach((h) => tap.test(h, testHelp.bind(null, h)));
-
-	// Function body resolution and scope assignment prior to overhead call.
-	function testHelp(helpArgVariant, tap) {
+	const testHelp = (helpArgVariant, tap) => {
 		const child = spawn(node, [bin, helpArgVariant]);
 		let out = '';
 		child.stdout.on('data', (c) => out += c);
@@ -78,7 +75,9 @@ tap.test('help', (tap) => {
 			tap.match(out, /^Usage: rimraf <path> \[<path> \.\.\.\]/);
 			tap.end();
 		});
-	}
+	};
+
+	helps.forEach((h) => tap.test(h, testHelp.bind(null, h)));
 });
 
 tap.test('glob, but matches', (tap) => {
