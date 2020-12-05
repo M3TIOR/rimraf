@@ -1,4 +1,8 @@
-[![Build Status](https://travis-ci.org/isaacs/rimraf.svg?branch=master)](https://travis-ci.org/isaacs/rimraf) [![Dependency Status](https://david-dm.org/isaacs/rimraf.svg)](https://david-dm.org/isaacs/rimraf) [![devDependency Status](https://david-dm.org/isaacs/rimraf/dev-status.svg)](https://david-dm.org/isaacs/rimraf#info=devDependencies)
+# Attention! The following is deprecated post NodeJS 14.4 LTS
+
+> Since the 14 LTS added in rimraf's filesystem hardening to the natives,
+> those no longer need to be maintained externally. To go along with that,
+> `fs.rm` was added to remove any need for this repository AT ALL, WOOOT!
 
 The [UNIX command](http://en.wikipedia.org/wiki/Rm_(Unix)) `rm -rf` for node.
 
